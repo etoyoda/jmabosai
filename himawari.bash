@@ -22,7 +22,7 @@ if test -d $basetime; then
   exit 0
 fi
 mkdir -p himawari/$basetime
-cd himawari/$basetime
+pushd himawari/$basetime
 
 root=https://www.jma.go.jp/bosai/himawari/data/satimg
 z=5
@@ -33,4 +33,5 @@ do
   wget -q -x -nH --cut-dirs=7 -i ../zlist.txt
   rm -f ../zlist.txt
 done
+popd
 rm -f zt-himawari.json
