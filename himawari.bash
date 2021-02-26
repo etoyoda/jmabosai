@@ -25,12 +25,12 @@ mkdir -p himawari/$basetime
 cd himawari/$basetime
 
 root=https://www.jma.go.jp/bosai/himawari/data/satimg
+z=5
+
 for prod in $products
 do
-  mkdir -p $prod/4
-  pushd $prod/4
-  ruby -e '(11..16).each{|x|(4..8).each{|y| puts "#{ARGV.first}/#{x}/#{y}.jpg"}}' ${root}/${prod} > ../zlist.txt
-  wget -q -x -nH --cut-dirs=6 -i ../zlist.txt
+  ruby -e '(25..30).each{|x|(10..15).each{|y| puts "#{ARGV[0]}/#{x}/#{y}.jpg"}}' ${root}/${basetime}/fd/${validtime}/${prod}/${z} > ../zlist.txt
+  wget -q -x -nH --cut-dirs=7 -i ../zlist.txt
   rm -f ../zlist.txt
-  popd
 done
+rm -f zt-himawari.json
