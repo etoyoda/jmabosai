@@ -17,6 +17,8 @@ z=5
 interval=10800
 # montage でタイル結合を行う場合
 do_montage=true
+do_zip=true
+do_rmtile=true
 
 # データ保存場所は $JMADATADIR、未設定時はスクリプト設置場所
 cd ${JMADATADIR:-$(dirname $0)}
@@ -27,9 +29,12 @@ root=https://www.jma.go.jp/bosai/himawari/data/satimg
 
 # 時間リストを取得してプレーンテキストに変換する
 # ひまわりの場合 basetime=validtime なので basetime だけを出力
+# targetTimes_fd.txt は以下重複起動を防止するロックとなるので、
+# 終了時には必ず消えるように trap を設定する
 wget -OtargetTimes_fd.json -q ${root}/targetTimes_fd.json
 ruby -rjson -e 'JSON[File.read(ARGV.first)].each{|h| puts h["basetime"]}' \
   targetTimes_fd.json > targetTimes_fd.txt
+trap "rm -f ${PWD}/targetTimes_fd.txt" EXIT
 rm -f targetTimes_fd.json
 
 while read basetime
@@ -58,9 +63,8 @@ do
     wget -q -x -nH --cut-dirs=7 -i ../zlist.txt
     rm -f ../zlist.txt
     # タイルのまま連結表示するHTMLを書き出す
-    ruby -e 'bt, pr = ARGV
-      fn = pr.sub(/\//, "_") + ".html"
-      $stdout = File.open(fn, "w")
+    htmlfile=$(echo $prod | sed 's:/:_:')${basetime}.html
+    ruby -e 'pr = ARGV.first
       puts <<-HTML
         <html>
         <head><style type="text/css">
@@ -78,15 +82,22 @@ do
         puts "</tr>"
       }
       puts "</table></body></html>"
-    ' $basetime $prod
+    ' $prod > $htmlfile
+    if $do_zip; then
+      zipfile=$(echo $prod | sed 's:/:_:')${basetime}.zip
+      zip -0 -q -r $zipfile $htmlfile $prod
+    fi
     if $do_montage; then
-      pr=$(echo $prod | sed 's:/:_:')
+      montagefile=$(echo $prod | sed 's:/:_:')${basetime}
       montage ${prod}/5/*/10.jpg ${prod}/5/*/11.jpg ${prod}/5/*/12.jpg \
         ${prod}/5/*/13.jpg ${prod}/5/*/14.jpg ${prod}/5/*/15.jpg \
-        -tile 6x -geometry 256x256 ${pr}${basetime}.png
+        -tile 6x -geometry 256x256 ${montagefile}.jpg
+    fi
+    if $do_rmtile; then
+      pr=$(echo $prod | sed 's:/.*::')
+      rm -rf $pr $htmlfile
     fi
   done
   popd
 
 done < targetTimes_fd.txt
-rm -f targetTimes_fd.txt
