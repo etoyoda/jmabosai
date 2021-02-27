@@ -15,6 +15,8 @@ z=5
 # 取得間隔（秒）
 # interval=3600
 interval=10800
+# montage でタイル結合を行う場合
+do_montage=true
 
 # データ保存場所は $JMADATADIR、未設定時はスクリプト設置場所
 cd ${JMADATADIR:-$(dirname $0)}
@@ -77,6 +79,12 @@ do
       }
       puts "</table></body></html>"
     ' $basetime $prod
+    if $do_montage; then
+      pr=$(echo $prod | sed 's:/:_:')
+      montage ${prod}/5/*/10.jpg ${prod}/5/*/11.jpg ${prod}/5/*/12.jpg \
+        ${prod}/5/*/13.jpg ${prod}/5/*/14.jpg ${prod}/5/*/15.jpg \
+        -tile 6x -geometry 256x256 ${pr}${basetime}.png
+    fi
   done
   popd
 
