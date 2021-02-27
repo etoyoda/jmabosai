@@ -7,17 +7,20 @@ PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin
 LANG=C
 TZ=UTC
 
+let 'hour = 3600'
+let 'day = 24 * hour'
 # === 設定 ===
 # 取得画種
 products="B13/TBB B08/TBB"
 # ズームレベル
 z=5
 # 取得間隔（秒）
-# interval=3600
-interval=10800
-# montage でタイル結合を行う場合
+let 'interval = hour * 3'
+# montage でタイル結合を行う場合 true
 do_montage=true
+# タイルを zip でまとめて保存する場合 true
 do_zip=true
+# タイルを montage/zip した後削除する場合 true
 do_rmtile=true
 
 # データ保存場所は $JMADATADIR、未設定時はスクリプト設置場所
@@ -101,3 +104,5 @@ do
   popd
 
 done < targetTimes_fd.txt
+
+
