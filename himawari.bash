@@ -1,7 +1,8 @@
 #!/bin/bash
 set -Ceuo pipefail
-#
+# (C) TOYODA Eizi, 2021
 # ひまわり画像をダウンロードする
+# 定期的に起動されることを想定している。時刻は細かくチューニングしなくてよい。
 #
 PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin
 LANG=C
@@ -14,17 +15,19 @@ let 'day = 24 * hour'
 products="B13/TBB B08/TBB"
 # ズームレベル
 z=5
+: TODO 取得領域も設定できるようにすべき
 # 取得間隔（秒）
 let 'interval = hour * 3'
 # montage でタイル結合を行う場合 true
-do_montage=true
+: ${do_montage:=true}
 # タイルを zip でまとめて保存する場合 true
-do_zip=true
+: ${do_zip:=true}
 # タイルを montage/zip した後削除する場合 true
-do_rmtile=true
-
+: ${do_rmtile:=true}
 # データ保存場所は $JMADATADIR、未設定時はスクリプト設置場所
-cd ${JMADATADIR:-$(dirname $0)}
+: ${JMADATADIR:=$(dirname $0)}
+
+cd $JMADATADIR
 mkdir -p himawari
 cd himawari
 
@@ -44,20 +47,22 @@ while read basetime
 do
   validtime=$basetime
 
+  # ダウンロード対象の時刻を選ぶ
+  # UNIX time 換算して interval の倍数でなければスキップ
   itime=$(ruby -rtime -e 'puts Time.parse(ARGV.first).to_i' $basetime)
   if expr $itime \% $interval '!=' 0 >/dev/null
   then
     : skipping $basetime
     continue
   fi
-
+  # 重複ダウンロード回避
   if test -d $basetime; then
     : $basetime already exists
     continue
   fi
+
   mkdir -p $basetime
   pushd $basetime
-
   for prod in $products
   do
     ruby -e '(25..30).each{|x|(10..15).each{|y|
@@ -69,13 +74,9 @@ do
     htmlfile=$(echo $prod | sed 's:/:_:')${basetime}.html
     ruby -e 'pr = ARGV.first
       puts <<-HTML
-        <html>
-        <head><style type="text/css">
-        table { border-collapse: collapse; }
-        tr td { padding: 0; border: 0;}
-        </style>
-        </head>
-        <body><table>
+        <html><head><style type="text/css">
+        table { border-collapse: collapse; } tr td { padding: 0; border: 0;}
+        </style></head><body><table>
         HTML
       (10..15).each{|y|
         puts "<tr>"
@@ -104,5 +105,4 @@ do
   popd
 
 done < targetTimes_fd.txt
-
 
