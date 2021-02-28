@@ -97,9 +97,12 @@ do
     fi
     if $do_montage; then
       montagefile=$(echo $prod | sed 's:/:_:')${basetime}
-      montage ${prod}/6/*/22.png ${prod}/6/*/23.png ${prod}/6/*/24.png \
+      montage \
+        ${prod}/6/*/22.png ${prod}/6/*/23.png ${prod}/6/*/24.png \
         ${prod}/6/*/25.png ${prod}/6/*/26.png ${prod}/6/*/27.png \
-        -tile 6x -geometry 256x256 ${montagefile}.png
+        -tile 6x -geometry 256x256 zzztmp.png
+      convert zzztmp.png -transparent white ${montagefile}.png
+      rm -f zzztmp.png
     fi
     if $do_rmtile; then
       pr=$(echo $prod | sed 's:/.*::')
