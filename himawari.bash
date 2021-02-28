@@ -24,6 +24,8 @@ let 'interval = hour * 3'
 : ${do_zip:=true}
 # タイルを montage/zip した後削除する場合 true
 : ${do_rmtile:=true}
+# 気象庁の時刻一覧から外れたあとの保存期間
+: ${keep_days:=7}
 # データ保存場所は $JMADATADIR、未設定時はスクリプト設置場所
 : ${JMADATADIR:=$(dirname $0)}
 
@@ -58,11 +60,13 @@ do
   # 重複ダウンロード回避
   if test -d $basetime; then
     : $basetime already exists
+    # タイムスタンプだけは更新しておく
+    touch $basetime
     continue
   fi
 
   mkdir -p $basetime
-  pushd $basetime
+  cd $basetime
   for prod in $products
   do
     ruby -e '(25..30).each{|x|(10..15).each{|y|
@@ -102,7 +106,9 @@ do
       rm -rf $pr $htmlfile
     fi
   done
-  popd
+  cd ..
 
 done < targetTimes_fd.txt
 
+# 保存期間が過ぎたディレクトリを削除
+find . -maxdepth 1 -ctime +${keep_days} | xargs -r rm -rf
