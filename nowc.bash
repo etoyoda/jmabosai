@@ -50,8 +50,11 @@ do
   validtime=$basetime
 
   # ダウンロード対象の時刻を選ぶ
-  # UNIX time 換算して interval の倍数でなければスキップ
-  itime=$(ruby -rtime -e 'puts Time.parse(ARGV.first).to_i' $basetime)
+  # basetime を通算秒に換算して interval の倍数でなければスキップ
+  # まずは年月日時分を GNU date が読める形式に変換
+  isotime=$(echo $basetime | sed 's/\(....\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1-\2-\3T\4:\5:\6/')
+  # GNU date で 1970-01-01T00:00:00Z からの通算秒に換算
+  itime=$(date --date=${isotime} +%s)
   if expr $itime \% $interval '!=' 0 >/dev/null
   then
     : skipping $basetime
@@ -69,11 +72,21 @@ do
   cd $basetime
   for prod in $products
   do
-    ruby -e '(53..58).each{|x|(22..27).each{|y|
-      puts "#{ARGV[0]}/#{x}/#{y}.png"}}' \
-      ${root}/${basetime}/none/${validtime}/${prod}/${z} > ../zlist.txt
-    wget -q -x -nH --cut-dirs=7 -i ../zlist.txt
-    rm -f ../zlist.txt
+    rm -f urllist.txt
+    for ((x=53; x<=58; x++))
+    do
+      for ((y=22; y<=27; y++))
+      do
+        echo "${root}/${basetime}/none/${validtime}/${prod}/${z}/${x}/${y}.png"  >> urllist.txt
+      done
+    done
+    # 一度通信エラーで落ちたらリトライする
+    if ! wget -q -x -nH --cut-dirs=7 -i urllist.txt
+    then
+      sleep 30
+      wget -q -x -nH --cut-dirs=7 -i urllist.txt
+    fi
+    rm -f urllist.txt
     # タイルのまま連結表示するHTMLを書き出す
     htmlfile=$(echo $prod | sed 's:/:_:')${basetime}.html
     ruby -e 'pr = ARGV.first
