@@ -89,21 +89,20 @@ do
     rm -f urllist.txt
     # タイルのまま連結表示するHTMLを書き出す
     htmlfile=$(echo $prod | sed 's:/:_:')${basetime}.html
-    ruby -e 'pr = ARGV.first
-      puts <<-HTML
-        <html><head><style type="text/css">
-        table { border-collapse: collapse; } tr td { padding: 0; border: 0;}
-        </style></head><body><table>
-        HTML
-      (22..27).each{|y|
-        puts "<tr>"
-        (53..58).each{|x|
-          puts "<td><img src='\''#{pr}/6/#{x}/#{y}.png'\''></td>"
-        }
-        puts "</tr>"
-      }
-      puts "</table></body></html>"
-    ' $prod > $htmlfile
+    cat <<HEAD > $htmlfile
+<html><head><style type="text/css">
+table { border-collapse: collapse; } tr td { padding: 0; border: 0;}
+</style></head><body><table>
+HEAD
+    for ((y=22; y<=27; y++))
+    do
+      echo '<tr>' >> $htmlfile
+      for ((x=53; x<=58; x++))
+      do
+        echo "<td><img src=\"${prod}/6/${x}/${y}.png\"></td>" >> $htmlfile
+      done
+      echo '</tr>' >> $htmlfile
+    done
     if $do_zip; then
       zipfile=$(echo $prod | sed 's:/:_:')${basetime}.zip
       zip -0 -q -r $zipfile $htmlfile $prod
