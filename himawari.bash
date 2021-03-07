@@ -71,9 +71,9 @@ do
   do
     ruby -e '(25..30).each{|x|(10..15).each{|y|
       puts "#{ARGV[0]}/#{x}/#{y}.jpg"}}' \
-      ${root}/${basetime}/fd/${validtime}/${prod}/${z} > ../zlist.txt
-    wget -q -x -nH --cut-dirs=7 -i ../zlist.txt
-    rm -f ../zlist.txt
+      ${root}/${basetime}/fd/${validtime}/${prod}/${z} > urllist.txt
+    wget -q -x -nH --cut-dirs=7 -i urllist.txt
+    rm -f urllist.txt
     # タイルのまま連結表示するHTMLを書き出す
     htmlfile=$(echo $prod | sed 's:/:_:')${basetime}.html
     ruby -e 'pr = ARGV.first
