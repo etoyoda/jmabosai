@@ -35,10 +35,22 @@ cd nowc
 
 root=https://www.jma.go.jp/bosai/jmatile/data/nowc
 
+# times.txt は以下重複起動を防止するロックなのだが、不幸にして残った場合
+if timestamp=$(stat --format=%Z times.txt) ; then
+  limit=$(date --date='1 hour ago' '+%s')
+  if [[ $timestamp -lt $limit ]] ; then
+    rm -f times.txt targetTimes_N1.json
+    date --date="@${timestamp}" +'Lock file at %c - removed'
+  else
+    date --date="@${timestamp}" +'Lock file at %c - aborted'
+    false
+  fi
+fi
+
 # 時間リストを取得してプレーンテキストに変換する
 # 実況の場合 basetime=validtime なので basetime だけを出力
 # times.txt は以下重複起動を防止するロックとなるので、
-# 終了時には必ず消えるように trap を設定する
+# 終了時に消えるように trap を設定する
 wget -OtargetTimes_N1.json -q ${root}/targetTimes_N1.json
 ruby -rjson -e 'JSON[File.read(ARGV.first)].each{|h| puts h["basetime"]}' \
   targetTimes_N1.json > times.txt
