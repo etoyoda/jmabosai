@@ -36,7 +36,7 @@ cd nowc
 root=https://www.jma.go.jp/bosai/jmatile/data/nowc
 
 # times.txt は以下重複起動を防止するロックなのだが、不幸にして残った場合
-if timestamp=$(stat --format=%Z times.txt) ; then
+if timestamp=$(stat --format=%Z times.txt 2>/dev/null) ; then
   limit=$(date --date='1 hour ago' '+%s')
   if [[ $timestamp -lt $limit ]] ; then
     rm -f times.txt targetTimes_N1.json
