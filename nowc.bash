@@ -28,6 +28,8 @@ let 'interval = hour * 1'
 : ${keep_days:=1}
 # データ保存場所は $JMADATADIR、未設定時はスクリプト設置場所
 : ${JMADATADIR:=$(dirname $0)}
+# アーカイブ保存する場合
+: ${do_archive:=true}
 
 cd $JMADATADIR
 mkdir -p nowc
@@ -118,6 +120,11 @@ HEAD
     if $do_zip; then
       zipfile=$(echo $prod | sed 's:/:_:')${basetime}.zip
       zip -0 -q -r $zipfile $htmlfile $prod
+      if $do_archive; then
+        ym=$(ruby -rtime -e 'puts Time.parse(ARGV.first).strftime("%Y-%m %c")' $basetime)
+        test ! -d /nwp/a1/$ym || mkdir -f /nwp/a1/$ym
+        ln -f $zipfile /nwp/a1/$ym/$zipfile
+      fi
     fi
     if $do_montage; then
       montagefile=$(echo $prod | sed 's:/:_:')${basetime}
