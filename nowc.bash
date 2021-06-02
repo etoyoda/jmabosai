@@ -121,8 +121,8 @@ HEAD
       zipfile=$(echo $prod | sed 's:/:_:')${basetime}.zip
       zip -0 -q -r $zipfile $htmlfile $prod
       if $do_archive; then
-        ym=$(ruby -rtime -e 'puts Time.parse(ARGV.first).strftime("%Y-%m %c")' $basetime)
-        test ! -d /nwp/a1/$ym || mkdir -f /nwp/a1/$ym
+        ym=$(ruby -rtime -e 'puts Time.parse(ARGV.first).strftime("%Y-%m")' $basetime)
+        test -d /nwp/a1/$ym || mkdir /nwp/a1/$ym
         ln -f $zipfile /nwp/a1/$ym/$zipfile
       fi
     fi
